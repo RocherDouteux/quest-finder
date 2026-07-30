@@ -16,6 +16,7 @@ const catalogLanguageKey = "quest-finder.catalog-language";
 let completed = new Set<number>(JSON.parse(localStorage.getItem(progressKey) ?? "[]"));
 let catalogLanguage: CatalogLanguage = localStorage.getItem(catalogLanguageKey) === "fr" ? "fr" : "en";
 let selectedExpansion: Expansion | null = null;
+const openAreas = new Set<string>();
 let query = "";
 const app = document.querySelector<HTMLElement>("#app")!;
 
@@ -61,7 +62,9 @@ function render(): void {
       <div class="bar"><span style="width:${percent}%"></span></div><p>${done.toLocaleString()} completed · ${quests.length.toLocaleString()} catalogued</p></button>`;
   }).join("");
   document.querySelectorAll<HTMLButtonElement>("[data-expansion]").forEach((button) => button.addEventListener("click", () => {
-    selectedExpansion = button.dataset.expansion as Expansion;
+    const nextExpansion = button.dataset.expansion as Expansion;
+    if (selectedExpansion !== nextExpansion) openAreas.clear();
+    selectedExpansion = nextExpansion;
     render();
     document.querySelector("#expansion-details")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }));
@@ -86,7 +89,14 @@ function renderDetails(): void {
     .sort(([a], [b]) => a.localeCompare(b, dataLocale())).map(([area, quests]) => zoneBlock(area, quests)).join("")}</div>`;
   document.querySelector("#close-details")!.addEventListener("click", () => {
     selectedExpansion = null;
+    openAreas.clear();
     render();
+  });
+  section.querySelectorAll<HTMLDetailsElement>("details[data-zone]").forEach((details) => {
+    details.addEventListener("toggle", () => {
+      const area = details.dataset.zone!;
+      details.open ? openAreas.add(area) : openAreas.delete(area);
+    });
   });
   bindQuestCheckboxes(section);
 }
@@ -98,7 +108,7 @@ function zoneBlock(area: string, quests: Quest[]): string {
     const genre = localGenre(quest);
     genres.set(genre, [...(genres.get(genre) ?? []), quest]);
   }
-  return `<details class="zone"><summary><span>${escapeHtml(area)}</span><small>${remaining.toLocaleString()} quests left</small></summary>
+  return `<details class="zone" data-zone="${escapeHtml(area)}" ${openAreas.has(area) ? "open" : ""}><summary><span>${escapeHtml(area)}</span><small>${remaining.toLocaleString()} quests left</small></summary>
     <div class="genre-list">${[...genres.entries()].sort(([a], [b]) => a.localeCompare(b, dataLocale())).map(([genre, genreQuests]) =>
       `<section class="genre"><h4>${escapeHtml(genre)}</h4>${genreQuests.map(questRow).join("")}</section>`).join("")}</div></details>`;
 }
