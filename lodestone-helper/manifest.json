@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Quest Finder Lodestone Helper",
+  "version": "0.1.4",
+  "description": "Exports your private FFXIV Lodestone My Quests history for Quest Finder.",
+  "permissions": ["downloads"],
+  "content_scripts": [{
+    "matches": [
+      "https://na.finalfantasyxiv.com/lodestone/character/*/quest/*",
+      "https://eu.finalfantasyxiv.com/lodestone/character/*/quest/*",
+      "https://fr.finalfantasyxiv.com/lodestone/character/*/quest/*",
+      "https://de.finalfantasyxiv.com/lodestone/character/*/quest/*"
+    ],
+    "js": ["content.js"]
+  }]
+}
